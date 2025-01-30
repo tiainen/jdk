@@ -43,6 +43,7 @@ AC_DEFUN_ONCE([LIB_SETUP_BUNDLED_LIBS],
   LIB_SETUP_HARFBUZZ
   LIB_SETUP_GTK
   LIB_SETUP_PANGO
+  LIB_SETUP_XXF86VM
 ])
 
 ################################################################################
@@ -361,7 +362,7 @@ AC_DEFUN_ONCE([LIB_SETUP_GTK],
 ################################################################################
 AC_DEFUN_ONCE([LIB_SETUP_PANGO],
 [
-  AC_ARG_WITH(gtk, [AS_HELP_STRING([--with-pango],
+  AC_ARG_WITH(pango, [AS_HELP_STRING([--with-pango],
       [use pango from build system or OpenJDK source (system, bundled) @<:@bundled@:>@])])
 
   AC_MSG_CHECKING([for which pango to use])
@@ -394,4 +395,44 @@ AC_DEFUN_ONCE([LIB_SETUP_PANGO],
   AC_SUBST(USE_EXTERNAL_PANGO)
   AC_SUBST(PANGO_CFLAGS)
   AC_SUBST(PANGO_LIBS)
+])
+
+################################################################################
+# Setup Xxf86vm
+################################################################################
+AC_DEFUN_ONCE([LIB_SETUP_XXF86VM],
+[
+  AC_ARG_WITH(xxf86vm, [AS_HELP_STRING([--with-xxf86vm],
+      [use Xxf86vm from build system or OpenJDK source (system, bundled) @<:@bundled@:>@])])
+
+  AC_MSG_CHECKING([for which Xxf86vm to use])
+
+  DEFAULT_XXF86VM=system
+  # If user didn't specify, use DEFAULT_XXF86VM
+  if test "x${with_xxf86vm}" = "x"; then
+    with_xxf86vm=${DEFAULT_XXF86VM}
+  fi
+
+  if test "x${with_xxf86vm}" = "xbundled"; then
+    USE_EXTERNAL_XXF86VM=false
+    XXF86VM_CFLAGS=""
+    XXF86VM_LIBS=""
+    AC_MSG_RESULT([bundled])
+  elif test "x${with_xxf86vm}" = "xsystem"; then
+    AC_MSG_RESULT([system])
+    PKG_CHECK_MODULES([XXF86VM], [xxf86vm], [XX86VM_FOUND=yes], [XX86VM_FOUND=no])
+    if test "x${XX86VM_FOUND}" = "xyes"; then
+      # PKG_CHECK_MODULES will set XX86VM_CFLAGS and XX86VM_LIBS
+      USE_EXTERNAL_XXF86VM=true
+    else
+      HELP_MSG_MISSING_DEPENDENCY([xxf86vm])
+      AC_MSG_ERROR([--with-xxf86vm=system specified, but no Xxf86vm found! $HELP_MSG])
+    fi
+  else
+    AC_MSG_ERROR([Invalid value for --with-xxf86vm: ${with_xxf86vm}, use 'system' or 'bundled'])
+  fi
+
+  AC_SUBST(USE_EXTERNAL_XXF86VM)
+  AC_SUBST(XX86VM_CFLAGS)
+  AC_SUBST(XX86VM_LIBS)
 ])
